@@ -3,21 +3,34 @@ from markupsafe import escape
 
 app = Flask(__name__)
 
-# Simple Routing 
+profiles = {"admin": "1234"}
+
 @app.route("/")
 def homepage():
-    return "<h1>Hello World!</h1>"
+    return render_template("proj_index.html")
 
-# Rendering Templates
-@app.route("/html-file")
-def render_index_html_file():
-    return render_template("test_template.html")
+@app.get("/login")
+def login_get():
+    return render_template("proj_login_form.html")
 
-# Using URL Parameters
-@app.route("/name-input/<name>")
-def name_input(name):
-    return f"Hello, {escape(name)}!"
-
-@app.route("/number-input/<int:num>")
-def num_input(num):
-    return f"You have provided the number {num} :o"
+@app.post("/login")
+def login_post():
+    # 0: Account doesn't exist, 1: Wrong Password, 2: Blank field(s)
+    username = request.form['username']
+    password = request.form['password']
+    if (not username.isspace() and not password.isspace()):
+        # Valid info given
+        if (username in profiles):
+            # A profile with the given username exists
+            if (profiles[username] == password):
+                # The password of the given username matches
+                return render_template("proj_profile_page.html.jinja", username=username)
+            else:
+                # The password of the given username is incorrect
+                return render_template("proj_login_error.html.jinja", error=1, username=username)
+        else:
+            # A profile with the given username does not exist
+            return render_template("proj_login_error.html.jinja", error=0, username=username)
+    else:
+        # One or both was/were whitespace
+        return render_template("proj_login_error.html.jinja", error=2)
