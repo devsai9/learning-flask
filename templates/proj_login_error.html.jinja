@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+       #btn {
+            background-color: #4CAF50;
+            padding: 10px 30px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    {# 0: Account doesn't exist, 1: Wrong Password, 2: Blank field(s) #}
+    <div id="container">
+        <h1>Whoops!</h1>
+        {% if error == 0 %}
+        <p>An account with the username of {{ username }} doesn't exist.</p>
+        {% elif error == 1 %}
+        <p>You've entered the wrong password for the account with the username of {{ username }}.</p>
+        {% elif error == 2 %}
+        <p>You did not provide all the necessary fields.</p>
+        {% else %}
+        <p>There seems to have been some error.</p>
+        {% endif %}
+        
+        <button id="btn" onclick="javascript:window.location.href = '/login'">Go back</button>
+    </div>
+</body>
+</html>

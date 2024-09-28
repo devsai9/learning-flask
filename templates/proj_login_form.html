@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        * {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            
+            h1 {
+                text-align: center;
+            }
+        }
+
+        fieldset {
+            width: fit-content;
+            border-radius: 10px;
+            padding: 30px;
+            padding-bottom: 10px;
+
+            form {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        input {
+            border-radius: 10px;
+            padding: 10px;
+            background-color: #f1f1f1;
+            border: 2px solid #ccc;
+            margin-bottom: 10px;
+        }
+
+        #btn {
+            background-color: #4CAF50;
+            padding: 10px 30px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Login</h1>
+        <fieldset>
+            <legend>Login Form</legend>
+            <form action="/login" method="post">
+                <span>
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" placeholder="admin" autocomplete="off" required>
+                </span>
+                <span>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" placeholder="1234" required>
+                </span>
+                <input type="submit" value="Login" id="btn">
+            </form>
+        </fieldset>
+    </div>
+</body>
+</html>
