@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MNIST-dataset-based AI Model</title>
+    <style>
+        #container {
+            padding: 20px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            position: absolute;
+        }
+
+        #container > fieldset > form {
+            text-align: center;
+        }
+
+        #container > fieldset > form > input {
+            cursor: pointer;
+            border: 1px solid black;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        #container > fieldset > form > button {
+            margin-top: 10px;
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+
+        #container > fieldset > form > button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>MNIST-dataset-based AI Model</h1>
+        <fieldset>
+            <legend>Try out the model</legend>
+            <form action="/predict" method="post" enctype="multipart/form-data">
+                <label for="file">Choose an image file:</label><br>
+                <input type="file" id="file" name="file" accept="image/png, image/jpeg, image/jpg"><br>
+                <button type="submit">Predict</button>
+            </form>
+        </fieldset>
+    </div>
+</body>
+</html>
