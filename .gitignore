@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 
 data/
+flask-with-pt/static/temp.png

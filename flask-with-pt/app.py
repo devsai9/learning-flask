@@ -4,8 +4,12 @@ import torch
 from torch import nn
 from torchvision import transforms
 import numpy as np
+import os
 
 app = Flask(__name__)
+
+if not os.path.exists('static'): 
+    os.makedirs('static')
 
 class MNISTModel(nn.Module):
     def __init__(self):
@@ -28,10 +32,10 @@ model.load_state_dict(torch.load('model.pth', weights_only=True))
 model.eval()
 
 transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),  # Ensure the image has a single channel (grayscale)
-    transforms.Resize((28, 28)),  # Resize to 28x28 pixels
-    transforms.ToTensor(),  # Convert image to PyTorch tensor
-    transforms.Normalize((0.5,), (0.5,))  # Normalize pixel values
+    transforms.Grayscale(num_output_channels=1),
+    transforms.Resize((28, 28)),
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))
 ])
 
 @app.route('/')
@@ -45,20 +49,22 @@ def predict():
     file = request.files['file']
     if file.filename == '':
         return render_template('results.html.jinja', result='No file provided')
+    
     if file:
         try:
             img = Image.open(file).convert('L')
-            img = transform(img).unsqueeze(0) 
-
+            img.save('static/temp.png')
+            img = transform(img).unsqueeze(0)
             with torch.no_grad():
                 output = model(img)
-                _, predicted = torch.max(output.data, 1)
-            
-            prediction = predicted.item()
-
-            print(f'Predicted digit: {prediction}')
-
-            return render_template('results.html.jinja', result=prediction)
+                probabilities = nn.functional.softmax(output, dim=1)
+                confidence_scores = probabilities.numpy().flatten()
+                prediction = np.argmax(confidence_scores)
+            return render_template('results.html.jinja', 
+                                   result=prediction, 
+                                   predictions=confidence_scores.tolist(), 
+                                   image_path='static/temp.png',
+                                   enumerate=enumerate)
         except Exception as e:
             print(f'Error during prediction: {e}')
             return render_template('results.html.jinja', result=f'Error during prediction: {e}')

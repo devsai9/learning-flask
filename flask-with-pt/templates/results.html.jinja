@@ -11,6 +11,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             position: absolute;
+            text-align: center;
         }
 
         #return {
@@ -21,12 +22,32 @@
             border: 1px solid black;
             border-radius: 5px;
         }
+
+        ul {
+            text-align: left;
+        }
     </style>
 </head>
 <body>
     <a href="/" id="return">&lt; Go back</a>
     <div id="container">
         <h2>Prediction: {{ result }}</h2>
+        {% if image_path %}
+            <p>Uploaded Image:</p>
+            <img src="{{ image_path }}" alt="Uploaded Image" width="200" />
+        {% endif %}
+        {% if predictions %}
+            <p>Prediction Confidences:</p>
+            <ul>
+                {% for index, prediction in enumerate(predictions) %}
+                    {% if index == result %}
+                        <li><b>The model was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</b></li>
+                    {% else %}
+                        <li>The model was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+        {% endif %}
     </div>
 </body>
 </html>
