@@ -42,6 +42,10 @@ transform = transforms.Compose([
 def home():
     return render_template('index.html')
 
+@app.route('/stats')
+def stats():
+    return render_template('stats.html')
+
 @app.post('/predict')
 def predict():
     if 'file' not in request.files:

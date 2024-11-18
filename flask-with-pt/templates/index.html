@@ -37,11 +37,19 @@
         #container > fieldset > form > button:hover {
             background-color: #45a049;
         }
+
+        #model_stats {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            color: black;
+        }
     </style>
 </head>
 <body>
     <div id="container">
         <h1>MNIST-dataset-based AI Model</h1>
+        <a id="model_stats" href="/stats">Model Stats ></a>
         <fieldset>
             <legend>Try out the model</legend>
             <form action="/predict" method="post" enctype="multipart/form-data">
