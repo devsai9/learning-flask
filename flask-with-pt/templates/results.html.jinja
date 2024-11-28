@@ -32,6 +32,7 @@
     <a href="/" id="return">&lt; Go back</a>
     <div id="container">
         <h2>Prediction: {{ result }}</h2>
+        <p>Model #{{ model }}</p>
         {% if image_path %}
             <p>Uploaded Image:</p>
             <img src="{{ image_path }}" alt="Uploaded Image" width="200" />
@@ -41,9 +42,9 @@
             <ul>
                 {% for index, prediction in enumerate(predictions) %}
                     {% if index == result %}
-                        <li><b>The model was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</b></li>
+                        <li><b>Model #{{ model }} was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</b></li>
                     {% else %}
-                        <li>The model was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</li>
+                        <li>Model #{{ model }} was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</li>
                     {% endif %}
                 {% endfor %}
             </ul>

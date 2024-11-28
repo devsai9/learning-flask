@@ -3,18 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PyTorch MNIST Model Stats</title>
+    <title>PyTorch MNIST Models' Stats</title>
+    <style>
+        #return {
+            text-decoration: none;
+            color: black;
+            padding: 5px 10px;
+            background-color: #f1f1f1;
+            border: 1px solid black;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-    <h1>PyTorch MNIST Model Stats</h1>
-    <h2>Model: Convolutional Neural Network (CNN)</h2>
+    <a href="/" id="return">&lt; Go back</a>
+    <h1>PyTorch MNIST Models' Stats</h1>
+    <h2>Model Type: Convolutional Neural Network (CNN)</h2>
     <h2>Dataset: MNIST Dataset</h2>
-    <p>Training Accuracy: 96.955%</p>
-    <p>Testing Accuracy: 96.33%</p>
-    <br>
-    <p>Training Loss vs. Epoch Graph: </p>
-    <img src="../static/training_loss_vs_epoch.png" alt="Graph of Training Loss vs. Epoch">
-    <p>Confusion Matrix: </p>
-    <img src="../static/confusion_matrix.png" alt="Confusion Matrix">
+
+    <label for="model">Select Model:</label>
+    <select name="model" id="model">
+        <option value="1">Model 1</option>
+        <option value="2">Model 2</option>
+        <option value="3">Model 3</option>
+    </select>
+    <div id="m1">
+        <p>Model 1 Training Accuracy: 96.96%</p>
+        <p>Model 1 Testing Accuracy: 96.33%</p>
+        <br>
+        <p>Model 1 Training Loss vs. Epoch Graph: </p>
+        <img src="../static/m1_training_loss_vs_epoch.png" alt="Model 1's Graph of Training Loss vs. Epoch">
+        <p>Model 1 Confusion Matrix: </p>
+        <img src="../static/m1_confusion_matrix.png" alt="Model 1's Confusion Matrix">
+    </div>
+
+    <div id="m2">
+        <p>Model 2 Training Accuracy: 97.46%</p>
+        <p>Model 2 Testing Accuracy: 96.89%</p>
+        <br>
+        <p>Model 2 Training Loss vs. Epoch Graph: </p>
+        <img src="../static/m2_training_loss_vs_epoch.png" alt="Model 2's Graph of Training Loss vs. Epoch">
+        <p>Model 2 Confusion Matrix: </p>
+        <img src="../static/m2_confusion_matrix.png" alt="Model 2's Confusion Matrix">
+    </div>
+
+    <div id="m3">
+        <p>Model 3 Training Accuracy: 96.92%</p>
+        <p>Model 3 Testing Accuracy: 96.44%</p>
+        <br>
+        <p>Model 3 Training Loss vs. Epoch Graph: </p>
+        <img src="../static/m3_training_loss_vs_epoch.png" alt="Model 3's Graph of Training Loss vs. Epoch">
+        <p>Model 3 Confusion Matrix: </p>
+        <img src="../static/m3_confusion_matrix.png" alt="Model 3's Confusion Matrix">
+    </div>
+
+    <script defer>
+        const modelSelect = document.getElementById('model');
+        const m1 = document.getElementById('m1');
+        const m2 = document.getElementById('m2');
+        const m3 = document.getElementById('m3');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            m2.style.display = 'none';
+            m3.style.display = 'none';
+        });
+
+        modelSelect.addEventListener('change', () => {
+            if (modelSelect.value === '1') {
+                m1.style.display = 'block';
+                m2.style.display = 'none';
+                m3.style.display = 'none';
+            } else if (modelSelect.value === '2') {
+                m1.style.display = 'none';
+                m2.style.display = 'block';
+                m3.style.display = 'none';
+            } else if (modelSelect.value === '3') {
+                m1.style.display = 'none';
+                m2.style.display = 'none';
+                m3.style.display = 'block';
+            }
+        });
+    </script>
 </body>
 </html>

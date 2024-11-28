@@ -11,7 +11,8 @@ app = Flask(__name__)
 if not os.path.exists('static'): 
     os.makedirs('static')
 
-class MNISTModel(nn.Module):
+# Model 1
+class MNISTModel1(nn.Module):
     def __init__(self):
         super().__init__()
         self.model = nn.Sequential(
@@ -27,9 +28,74 @@ class MNISTModel(nn.Module):
         x = self.model(x)
         return x
     
-model = MNISTModel()
-model.load_state_dict(torch.load('model.pth', weights_only=True))
-model.eval()
+model1 = MNISTModel1()
+model1.load_state_dict(torch.load('model1.pth', weights_only=True))
+model1.eval()
+
+# Model 2
+class MNISTModel2(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(28 * 28, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(512, 256),
+            nn.BatchNorm1d(256),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Linear(128, 10),
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+model2 = MNISTModel2()
+model2.load_state_dict(torch.load('model2.pth', weights_only=True))
+model2.eval()
+
+# Model 3
+class MNISTModel3(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(28 * 28, 1024),
+            nn.BatchNorm1d(1024),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            
+            nn.Linear(1024, 512),
+            nn.BatchNorm1d(512),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            
+            nn.Linear(512, 256),
+            nn.LayerNorm(256),
+            nn.GELU(),
+            nn.Dropout(0.2),
+            
+            nn.Linear(256, 128),
+            nn.BatchNorm1d(128),
+            nn.ReLU(),
+            nn.Dropout(0.2),
+
+            nn.Linear(128, 10),
+        )
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
+    
+model3 = MNISTModel3()
+model3.load_state_dict(torch.load('model3.pth', weights_only=True))
+model3.eval()
 
 transform = transforms.Compose([
     transforms.Grayscale(num_output_channels=1),
@@ -48,11 +114,16 @@ def stats():
 
 @app.post('/predict')
 def predict():
-    if 'file' not in request.files:
-        return render_template('results.html.jinja', result='No file provided')
+    if 'file' not in request.files: return render_template('results.html.jinja', result='No file provided')
+
     file = request.files['file']
-    if file.filename == '':
-        return render_template('results.html.jinja', result='No file provided')
+    if file.filename == '': return render_template('results.html.jinja', result='No file provided')
+    
+    modelStr = request.form.get('model')
+    if (modelStr == '1'): model = model1
+    elif (modelStr == '2'): model = model2
+    elif (modelStr == '3'): model = model3
+    else: return render_template('results.html.jinja', result='No model selected')
     
     if file:
         try:
@@ -68,6 +139,7 @@ def predict():
                                    result=prediction, 
                                    predictions=confidence_scores.tolist(), 
                                    image_path='static/temp.png',
+                                   model=modelStr,
                                    enumerate=enumerate)
         except Exception as e:
             print(f'Error during prediction: {e}')
