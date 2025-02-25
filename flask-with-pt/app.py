@@ -2,107 +2,48 @@ from flask import Flask, render_template, request
 from PIL import Image
 import torch
 from torch import nn
-from torchvision import transforms
+from torchvision import transforms, datasets
 import numpy as np
 import os
+from simplexai.explainers.simplex import Simplex
+from torch.utils.data import DataLoader, Subset
+from latent_model_classes import MNISTModel1, MNISTModel2, MNISTModel3
 
 app = Flask(__name__)
 
 if not os.path.exists('static'): 
     os.makedirs('static')
 
-# Model 1
-class MNISTModel1(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(28 * 28, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.ReLU(),
-            nn.Linear(512, 10),
-        )
-
-    def forward(self, x):
-        x = self.model(x)
-        return x
-    
+# Load models
 model1 = MNISTModel1()
-model1.load_state_dict(torch.load('model1.pth', weights_only=True))
+model1.load_state_dict(torch.load('models/model1_latent.pth', weights_only=True))
 model1.eval()
 
-# Model 2
-class MNISTModel2(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(28 * 28, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(512, 256),
-            nn.BatchNorm1d(256),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-            nn.Linear(256, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.Linear(128, 10),
-        )
-
-    def forward(self, x):
-        x = self.model(x)
-        return x
-    
 model2 = MNISTModel2()
-model2.load_state_dict(torch.load('model2.pth', weights_only=True))
+model2.load_state_dict(torch.load('models/model2_latent.pth', weights_only=True))
 model2.eval()
 
-# Model 3
-class MNISTModel3(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.model = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(28 * 28, 1024),
-            nn.BatchNorm1d(1024),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            
-            nn.Linear(1024, 512),
-            nn.BatchNorm1d(512),
-            nn.ReLU(),
-            nn.Dropout(0.3),
-            
-            nn.Linear(512, 256),
-            nn.LayerNorm(256),
-            nn.GELU(),
-            nn.Dropout(0.2),
-            
-            nn.Linear(256, 128),
-            nn.BatchNorm1d(128),
-            nn.ReLU(),
-            nn.Dropout(0.2),
-
-            nn.Linear(128, 10),
-        )
-
-    def forward(self, x):
-        x = self.model(x)
-        return x
-    
 model3 = MNISTModel3()
-model3.load_state_dict(torch.load('model3.pth', weights_only=True))
+model3.load_state_dict(torch.load('models/model3_latent.pth', weights_only=True))
 model3.eval()
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 transform = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
+    transforms.Grayscale(),
     transforms.Resize((28, 28)),
     transforms.ToTensor(),
     transforms.Normalize((0.5,), (0.5,))
 ])
+
+# Load MNIST dataset for corpus
+mnist_train = datasets.MNIST(root='./data', train=True, transform=transform, download=False)
+corpus_indices = np.random.choice(len(mnist_train), size=100, replace=False)
+corpus_dataset = Subset(mnist_train, corpus_indices)
+corpus_loader = DataLoader(corpus_dataset, batch_size=100, shuffle=False)
+
+corpus_inputs, _ = next(iter(corpus_loader))
+corpus_inputs = corpus_inputs.to(device)
 
 @app.route('/')
 def home():
@@ -129,18 +70,41 @@ def predict():
         try:
             img = Image.open(file).convert('L')
             img.save('static/temp.png')
-            img = transform(img).unsqueeze(0)
-            with torch.no_grad():
-                output = model(img)
-                probabilities = nn.functional.softmax(output, dim=1)
-                confidence_scores = probabilities.numpy().flatten()
-                prediction = np.argmax(confidence_scores)
+            img = transform(img).unsqueeze(0).to(device)
+            
+            output = model(img)
+            probabilities = nn.functional.softmax(output, dim=1)
+            confidence_scores = probabilities.cpu().detach().numpy().flatten()
+            prediction = np.argmax(confidence_scores)
+            
+            # Compute latent representation
+            img_latent = model.latent_representation(img).detach()
+            corpus_latents = model.latent_representation(corpus_inputs).detach()
+            
+            # Apply Simplex
+            simplex = Simplex(corpus_examples=corpus_inputs, corpus_latent_reps=corpus_latents)
+            simplex.fit(test_examples=img, test_latent_reps=img_latent, reg_factor=0)
+            
+            # Retrieve top corpus examples
+            top_k_indices = simplex.weights[0].topk(k=3).indices.cpu().detach().numpy()
+            top_examples = [corpus_inputs[idx] for idx in top_k_indices]
+            
+            # Save top examples as images
+            top_example_paths = []
+            for i, img_tensor in enumerate(top_examples):
+                img_pil = Image.fromarray((img_tensor.cpu().detach().numpy().squeeze() * 255).astype(np.uint8))
+                img_path = f'static/top_example_{i}.png'
+                img_pil.save(img_path)
+                top_example_paths.append(img_path)
+                
             return render_template('results.html.jinja', 
                                    result=prediction, 
-                                   predictions=confidence_scores.tolist(), 
+                                   predictions=[round(x, 4) for x in confidence_scores.tolist()], 
                                    image_path='static/temp.png',
                                    model=modelStr,
-                                   enumerate=enumerate)
+                                   enumerate=enumerate,
+                                   top_indices=top_k_indices.tolist(),
+                                   top_example_paths=top_example_paths)
         except Exception as e:
             print(f'Error during prediction: {e}')
             return render_template('results.html.jinja', result=f'Error during prediction: {e}')

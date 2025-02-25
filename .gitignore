@@ -163,3 +163,4 @@ cython_debug/
 
 data/
 flask-with-pt/static/temp.png
+flask-with-pt/static/top_example*.png

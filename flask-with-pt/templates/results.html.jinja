@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Results</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
         #container {
             padding: 20px;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            position: absolute;
             text-align: center;
+            max-width: 600px;
         }
 
         #return {
@@ -21,10 +27,35 @@
             background-color: #f1f1f1;
             border: 1px solid black;
             border-radius: 5px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
         }
 
         ul {
             text-align: left;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .image-container div {
+            text-align: center;
+        }
+
+        img {
+            width: 100px;
+            height: 100px;
+            border: 1px solid #000;
+            border-radius: 5px;
+        }
+
+        .topExamplesHeader {
+            margin-top: 40px;
+            margin-bottom: 0;
         }
     </style>
 </head>
@@ -33,21 +64,36 @@
     <div id="container">
         <h2>Prediction: {{ result }}</h2>
         <p>Model #{{ model }}</p>
+
         {% if image_path %}
-            <p>Uploaded Image:</p>
-            <img src="{{ image_path }}" alt="Uploaded Image" width="200" />
+            <h3>Uploaded Image</h3>
+            <img src="{{ image_path }}" alt="Uploaded Image">
         {% endif %}
+
         {% if predictions %}
-            <p>Prediction Confidences:</p>
+            <h3>Prediction Confidences:</h3>
             <ul>
                 {% for index, prediction in enumerate(predictions) %}
                     {% if index == result %}
-                        <li><b>Model #{{ model }} was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</b></li>
+                        <li><b>Model #{{ model }} was {{ prediction * 100 }}% confident the image was a {{ index }}</b></li>
                     {% else %}
-                        <li>Model #{{ model }} was {{ prediction * 100 }}% sure/confident that the image was of a {{ index }}</li>
+                        <li>Model #{{ model }} was {{ prediction * 100 }}% confident the image was a {{ index }}</li>
                     {% endif %}
                 {% endfor %}
             </ul>
+        {% endif %}
+
+        {% if top_example_paths %}
+            <h3 class="topExamplesHeader">Top Corpus Examples</h3>
+            <div class="image-container">
+                {% for example_path in top_example_paths %}
+                    <div>
+                        <p>Example #{{ loop.index }}</p>
+                        <img src="{{ example_path }}" alt="Corpus Image {{ loop.index }}">
+                        <p>Index: {{ top_indices[loop.index0] }}</p>
+                    </div>
+                {% endfor %}
+            </div>
         {% endif %}
     </div>
 </body>
