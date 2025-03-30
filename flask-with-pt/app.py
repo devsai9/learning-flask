@@ -1,3 +1,8 @@
+# ---------------
+# MAIN FLASK SITE
+# ---------------
+
+# Imports
 from flask import Flask, render_template, request
 from PIL import Image
 import torch
@@ -14,21 +19,22 @@ app = Flask(__name__)
 if not os.path.exists('static'): 
     os.makedirs('static')
 
+# ------
+# MODELS
+# ------
 # Load models
 model1 = MNISTModel1()
-model1.load_state_dict(torch.load('models/model1_latent.pth', weights_only=True))
-model1.eval()
+model1_loaded = False
 
 model2 = MNISTModel2()
-model2.load_state_dict(torch.load('models/model2_latent.pth', weights_only=True))
-model2.eval()
+model2_loaded = False
 
 model3 = MNISTModel3()
-model3.load_state_dict(torch.load('models/model3_latent.pth', weights_only=True))
-model3.eval()
+model3_loaded = False
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+# Data Transform Function
 transform = transforms.Compose([
     transforms.Grayscale(),
     transforms.Resize((28, 28)),
@@ -45,6 +51,9 @@ corpus_loader = DataLoader(corpus_dataset, batch_size=100, shuffle=False)
 corpus_inputs, _ = next(iter(corpus_loader))
 corpus_inputs = corpus_inputs.to(device)
 
+# -----
+# FLASK
+# -----
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -55,23 +64,45 @@ def stats():
 
 @app.post('/predict')
 def predict():
+    global model1_loaded, model2_loaded, model3_loaded
+
+    # Check for uploaded image
     if 'file' not in request.files: return render_template('results.html.jinja', result='No file provided')
 
     file = request.files['file']
     if file.filename == '': return render_template('results.html.jinja', result='No file provided')
     
+    # Load appropriate model
+    # Only load a model if it has been selected and hasn't already been loaded
     modelStr = request.form.get('model')
-    if (modelStr == '1'): model = model1
-    elif (modelStr == '2'): model = model2
-    elif (modelStr == '3'): model = model3
+    if (modelStr == '1'):
+        if (not model1_loaded):
+            model1.load_state_dict(torch.load('models/model1_latent.pth', weights_only=True))
+            model1.eval()
+            model1_loaded = True
+        model = model1.to(device)
+    elif (modelStr == '2'):
+        if (not model2_loaded):
+            model2.load_state_dict(torch.load('models/model2_latent.pth', weights_only=True))
+            model2.eval()
+            model2_loaded = True
+        model = model2.to(device)
+    elif (modelStr == '3'):
+        if (not model3_loaded):
+            model3.load_state_dict(torch.load('models/model3_latent.pth', weights_only=True))
+            model3.eval()
+            model3_loaded = True
+        model = model3.to(device)
     else: return render_template('results.html.jinja', result='No model selected')
     
     if file:
         try:
+            # Temp save image for later use
             img = Image.open(file).convert('L')
             img.save('static/temp.png')
             img = transform(img).unsqueeze(0).to(device)
             
+            # Feed image into selected model
             output = model(img)
             probabilities = nn.functional.softmax(output, dim=1)
             confidence_scores = probabilities.cpu().detach().numpy().flatten()
@@ -106,5 +137,6 @@ def predict():
                                    top_indices=top_k_indices.tolist(),
                                    top_example_paths=top_example_paths)
         except Exception as e:
+            # Something went wrong during image opening, prediction, or Simplex
             print(f'Error during prediction: {e}')
             return render_template('results.html.jinja', result=f'Error during prediction: {e}')

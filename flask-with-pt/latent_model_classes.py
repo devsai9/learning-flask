@@ -1,3 +1,6 @@
+# -------------
+# MODEL CLASSES
+# -------------
 from torch import nn
 
 # Model 1
